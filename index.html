@@ -455,8 +455,9 @@ async function callAI(promptText,imgDataUrl,signal){
   try{body=await res.json();}catch(e){body=null;}
   if(!res.ok){
     const msg=(body&&body.error&&(body.error.message||body.error.status))||"";
-    if(res.status===401||res.status===403&&/key/i.test(msg))throw new AIError("Ключ не подходит. Проверьте его в настройках.");
-    if(res.status===400&&/API key/i.test(msg))throw new AIError("Ключ не подходит. Проверьте его в настройках.");
+    const raw=msg?" Ответ сервиса: «"+String(msg).slice(0,160)+"».":"";
+    if(res.status===401||(res.status===400&&/API key/i.test(msg)))throw new AIError("Сервис не принял ключ (код "+res.status+")."+raw+" Скорее всего, ключ удалён или скопирован не целиком. Создайте новый ключ и вставьте его в настройках (шестерёнка).");
+    if(res.status===403&&/key/i.test(msg))throw new AIError("Сервис отказал (код 403)."+raw);
     if(res.status===429)throw new AIError("Дневной лимит бесплатных запросов исчерпан или сервис перегружен. Попробуйте позже или впишите вручную.");
     if(res.status===402)throw new AIError("Сервис просит пополнить баланс. Выберите в настройках бесплатную модель.");
     if(res.status===403||/location|region|country/i.test(msg))throw new AIError("Сервис недоступен из вашей страны. Для Gemini включите VPN или выберите OpenRouter.");
